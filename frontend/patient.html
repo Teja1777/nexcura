@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patient Portal | NexCura</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0056b3;
+      --secondary-color: #00a8cc;
+      --accent-color: #eef2f3;
+      --text-color: #333;
+      --white: #ffffff;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text-color);
+    }
+    .box {
+      width: 100%;
+      max-width: 400px;
+      background: var(--white);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      border-top: 5px solid var(--secondary-color);
+      text-align: center;
+    }
+    h2 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+    }
+    button {
+      background: var(--secondary-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #008cba;
+    }
+    .back {
+      background: transparent;
+      color: #7f8c8d;
+      margin-top: 10px;
+      text-decoration: underline;
+      font-size: 0.9rem;
+    }
+    .back:hover {
+      background: transparent;
+      color: var(--text-color);
+    }
+    .toggle-link {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      display: block;
+    }
+    .toggle-link a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .hidden { display: none; }
+
+    /* Enhanced Form Styles */
+    .hospital-name {
+      color: var(--primary-color);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0 0 5px 0;
+      font-size: 1.1rem;
+    }
+    .form-group {
+      text-align: left;
+      margin-top: 15px;
+    }
+    .form-group label {
+      font-size: 0.9rem;
+      color: #555;
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: block;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      margin-top: 0;
+    }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Queue Status Enhancements */
+    .token-display {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border: 2px dashed var(--secondary-color);
+    }
+    .token-label {
+      display: block;
+      font-size: 0.9rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .token-number {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--primary-color);
+      margin: 10px 0;
+    }
+    .token-status {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    .status-waiting {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .queue-details {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      gap: 10px;
+    }
+    .detail-item {
+      flex: 1;
+      background: #f1faff;
+      padding: 15px 5px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .detail-item i {
+      font-size: 1.5rem;
+      color: var(--secondary-color);
+      margin-bottom: 5px;
+    }
+    .detail-value {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--text-color);
+    }
+    .detail-label {
+      font-size: 0.75rem;
+      color: #777;
+    }
+    .btn-refresh {
+      background: white;
+      border: 1px solid var(--secondary-color);
+      color: var(--secondary-color);
+      margin-top: 10px;
+    }
+    .btn-refresh:hover {
+      background: #f0f8ff;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- AUTH CONTAINER -->
+<div class="box" id="authBox">
+  <!-- SIGN IN SECTION -->
+  <div id="signinSection">
+    <h2><i class="fas fa-user-injured"></i> Patient Sign In</h2>
+    <input type="email" placeholder="Email Address">
+    <input type="password" placeholder="Password">
+    <button onclick="goToDetails()">Sign In</button>
+    <div class="toggle-link">
+      Don't have an account? <a href="#" onclick="toggleAuth()">Sign Up</a>
+    </div>
+  </div>
+
+  <!-- SIGN UP SECTION -->
+  <div id="signupSection" class="hidden">
+    <h2><i class="fas fa-user-plus"></i> Create Account</h2>
+    <input type="text" placeholder="Full Name">
+    <input type="email" placeholder="Email Address">
+    <input type="tel" placeholder="Mobile Number">
+    <input type="password" placeholder="Password">
+    <button onclick="toggleAuth()">Sign Up</button>
+    <div class="toggle-link">
+      Already have an account? <a href="#" onclick="toggleAuth()">Sign In</a>
+    </div>
+  </div>
+  
+  <button class="back" onclick="location.href='index.html'">Back to Home</button>
+</div>
+
+<!-- DETAILS -->
+<div class="box hidden" id="detailsBox">
+  <p class="hospital-name">NexCura Hospital</p>
+  <h2><i class="fas fa-file-medical"></i> Appointment Details</h2>
+  
+  <div class="form-group">
+    <label>Patient Name</label>
+    <input type="text" placeholder="Enter full name" id="pname_details">
+  </div>
+
+  <div class="row">
+    <div class="form-group" style="flex: 1;">
+      <label>Age</label>
+      <input type="number" placeholder="Age">
+    </div>
+    <div class="form-group" style="flex: 1;">
+      <label>Gender</label>
+      <select>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Department</label>
+    <select id="deptSelect">
+      <option>General Medicine</option>
+      <option>Cardiology</option>
+      <option>Orthopedics</option>
+      <option>Pediatrics</option>
+      <option>Neurology</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Symptoms (Optional)</label>
+    <textarea rows="2" placeholder="Briefly describe your symptoms"></textarea>
+  </div>
+
+  <div class="form-group">
+    <label>Priority</label>
+    <select>
+      <option>Normal</option>
+      <option>Emergency</option>
+    </select>
+  </div>
+
+  <button onclick="showQueue()">Generate Token</button>
+  <button class="back" onclick="location.href='index.html'">Back to Home</button>
+</div>
+
+<!-- QUEUE -->
+<div class="box hidden" id="queueBox">
+  <p class="hospital-name">NexCura Hospital</p>
+  <h2><i class="fas fa-clock"></i> Live Queue Status</h2>
+  
+  <div class="token-display">
+    <span class="token-label">Your Token</span>
+    <div class="token-number" id="displayToken">--</div>
+    <div class="token-status status-waiting">Waiting</div>
+  </div>
+
+  <div class="queue-details">
+    <div class="detail-item">
+      <i class="fas fa-users"></i>
+      <span class="detail-value">5</span>
+      <span class="detail-label">Ahead</span>
+    </div>
+    <div class="detail-item">
+      <i class="fas fa-hourglass-half"></i>
+      <span class="detail-value" id="displayWait">--</span>
+      <span class="detail-label">AI Est. Wait</span>
+    </div>
+    <div class="detail-item">
+      <i class="fas fa-user-md"></i>
+      <span class="detail-value" id="displayDoctor">--</span>
+      <span class="detail-label">Doctor</span>
+    </div>
+  </div>
+
+  <button class="btn-refresh" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Refresh Status</button>
+  <button class="back" onclick="location.href='index.html'">Back to Home</button>
+</div>
+
+<script>
+  function toggleAuth() {
+    document.getElementById("signinSection").classList.toggle("hidden");
+    document.getElementById("signupSection").classList.toggle("hidden");
+  }
+
+  function goToDetails() {
+    document.getElementById("authBox").classList.add("hidden");
+    document.getElementById("detailsBox").classList.remove("hidden");
+  }
+
+  function showQueue() {
+    const name = document.getElementById('pname_details').value;
+    const dept = document.getElementById('deptSelect').value;
+
+    if(!name) { alert("Please enter patient name"); return; }
+
+    // Simulate Backend/AI Token Generation
+    const token = "A-" + Math.floor(Math.random() * 900 + 100);
+    const waitTime = Math.floor(Math.random() * 40 + 10) + " min";
+    const doctors = {"General Medicine": "Dr. Smith", "Cardiology": "Dr. Emily", "Orthopedics": "Dr. Jones", "Pediatrics": "Dr. Lee", "Neurology": "Dr. Strange"};
+    const doctor = doctors[dept] || "Dr. On Call";
+
+    document.getElementById('displayToken').innerText = token;
+    document.getElementById('displayWait').innerText = waitTime;
+    document.getElementById('displayDoctor').innerText = doctor;
+
+    document.getElementById("detailsBox").classList.add("hidden");
+    document.getElementById("queueBox").classList.remove("hidden");
+  }
+</script>
+
+</body>
+</html>
