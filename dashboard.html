@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediQueue - Hospital Control Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --bg-light: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            padding-top: 20px;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .queue-table-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        .priority-high { border-left: 4px solid #dc3545; }
+        .priority-normal { border-left: 4px solid #0d6efd; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar d-flex flex-column p-3">
+        <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+            <i class="fa-solid fa-heart-pulse text-primary fa-2x me-2"></i>
+            <span class="fs-4 fw-bold">MediQueue</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" aria-current="page">
+                    <i class="fa-solid fa-chart-line me-2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link link-dark">
+                    <i class="fa-solid fa-user-doctor me-2"></i> Doctors
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link link-dark">
+                    <i class="fa-solid fa-gear me-2"></i> Settings
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Queue Control Center</h2>
+            <button class="btn btn-primary" onclick="addMockPatient()">
+                <i class="fa-solid fa-plus me-2"></i> New Patient Check-in
+            </button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Waiting Room</h6>
+                        <h3 class="fw-bold mb-0" id="count-waiting">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning me-3">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">In Consultation</h6>
+                        <h3 class="fw-bold mb-0" id="count-serving">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="icon-box bg-success bg-opacity-10 text-success me-3">
+                        <i class="fa-solid fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Completed Today</h6>
+                        <h3 class="fw-bold mb-0" id="count-completed">12</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="icon-box bg-info bg-opacity-10 text-info me-3">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0">Avg Wait Time</h6>
+                        <h3 class="fw-bold mb-0">18 min</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue Management Table -->
+        <div class="queue-table-card p-4">
+            <h5 class="mb-3">Current Queue</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Token ID</th>
+                            <th>Patient Name</th>
+                            <th>Department</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Wait Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-body">
+                        <!-- JS will populate this -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Mock Data
+        let patients = [
+            { id: 'A-101', name: 'Sarah Connor', dept: 'General', priority: 'High', status: 'In Progress', time: '0 min' },
+            { id: 'A-102', name: 'John Smith', dept: 'Orthopedics', priority: 'Normal', status: 'Waiting', time: '15 min' },
+            { id: 'A-103', name: 'Emily Davis', dept: 'Pediatrics', priority: 'Normal', status: 'Waiting', time: '22 min' },
+            { id: 'A-104', name: 'Michael Brown', dept: 'General', priority: 'High', status: 'Waiting', time: '5 min' }
+        ];
+
+        function renderQueue() {
+            const tbody = document.getElementById('queue-body');
+            tbody.innerHTML = '';
+            
+            let waitingCount = 0;
+            let servingCount = 0;
+
+            patients.forEach((p, index) => {
+                if(p.status === 'Waiting') waitingCount++;
+                if(p.status === 'In Progress') servingCount++;
+
+                const priorityClass = p.priority === 'High' ? 'priority-high' : 'priority-normal';
+                const statusBadge = p.status === 'In Progress' 
+                    ? '<span class="badge bg-warning text-dark status-badge">In Progress</span>' 
+                    : '<span class="badge bg-primary status-badge">Waiting</span>';
+
+                // Action Buttons Logic
+                let actions = '';
+                if (p.status === 'Waiting') {
+                    actions = `<button class="btn btn-sm btn-outline-success" onclick="updateStatus(${index}, 'In Progress')"><i class="fa-solid fa-bell"></i> Call</button>`;
+                } else if (p.status === 'In Progress') {
+                    actions = `<button class="btn btn-sm btn-outline-secondary" onclick="updateStatus(${index}, 'Completed')"><i class="fa-solid fa-check"></i> Done</button>`;
+                }
+
+                const row = `
+                    <tr class="${priorityClass}">
+                        <td class="fw-bold">${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.dept}</td>
+                        <td><span class="text-${p.priority === 'High' ? 'danger' : 'secondary'} fw-bold">${p.priority}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>${p.time}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            // Update Stats
+            document.getElementById('count-waiting').innerText = waitingCount;
+            document.getElementById('count-serving').innerText = servingCount;
+        }
+
+        function updateStatus(index, newStatus) {
+            if (newStatus === 'Completed') {
+                patients.splice(index, 1); // Remove from active queue
+                let completedCount = parseInt(document.getElementById('count-completed').innerText);
+                document.getElementById('count-completed').innerText = completedCount + 1;
+            } else {
+                patients[index].status = newStatus;
+                patients[index].time = '0 min'; // Reset time for consultation
+            }
+            renderQueue();
+        }
+
+        function addMockPatient() {
+            const id = 'A-' + (105 + Math.floor(Math.random() * 100));
+            const names = ['Alice Wonder', 'Bob Builder', 'Charlie Day', 'Diana Prince'];
+            const depts = ['General', 'ENT', 'Cardiology'];
+            
+            patients.push({
+                id: id,
+                name: names[Math.floor(Math.random() * names.length)],
+                dept: depts[Math.floor(Math.random() * depts.length)],
+                priority: Math.random() > 0.7 ? 'High' : 'Normal',
+                status: 'Waiting',
+                time: '0 min'
+            });
+            renderQueue();
+        }
+
+        // Initial Render
+        renderQueue();
+    </script>
+</body>
+</html>
