@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Doctor Dashboard | NexCura</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #0056b3;
+      --secondary-color: #00a8cc;
+      --accent-color: #eef2f3;
+      --text-color: #333;
+      --white: #ffffff;
+      --doctor-color: #6c5ce7;
+      --success-color: #2ecc71;
+      --danger-color: #e74c3c;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      color: var(--text-color);
+    }
+
+    /* Auth Styles */
+    .auth-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 90vh;
+    }
+    .box {
+      width: 100%;
+      max-width: 400px;
+      background: var(--white);
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      border-top: 5px solid var(--doctor-color);
+      text-align: center;
+    }
+    h2 { color: var(--doctor-color); margin-bottom: 20px; }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+    button {
+      background: var(--doctor-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+      margin-top: 20px;
+    }
+    button:hover { background: #5a4bcf; }
+    .back-link { display: block; text-align: center; margin-top: 20px; color: #7f8c8d; text-decoration: none; }
+    .toggle-link { margin-top: 15px; font-size: 0.9rem; }
+    .toggle-link a { color: var(--secondary-color); text-decoration: none; font-weight: bold; }
+    .hidden { display: none; }
+
+    /* Dashboard Styles */
+    .dashboard-container { max-width: 1200px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .hospital-name { font-size: 1.5rem; font-weight: bold; color: var(--doctor-color); }
+    .logout-btn { width: auto; margin: 0; background: var(--danger-color); cursor: pointer; }
+
+    .metrics {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .card {
+      flex: 1;
+      background: var(--white);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      text-align: center;
+      min-width: 200px;
+      border-left: 5px solid var(--doctor-color);
+    }
+    .card h3 { margin: 0 0 10px; color: #666; font-size: 1rem; }
+    .card p { font-size: 2rem; font-weight: bold; color: var(--doctor-color); margin: 0; }
+
+    .main-content {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    .current-patient {
+        flex: 2;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-top: 5px solid var(--success-color);
+    }
+    .queue-list {
+        flex: 1;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .patient-info { margin-top: 20px; }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+    .info-label { font-weight: bold; color: #555; }
+    .info-val { color: #333; }
+
+    .queue-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        align-items: center;
+    }
+    .queue-item:last-child { border-bottom: none; }
+    .q-token { font-weight: bold; color: var(--doctor-color); background: #f3e5f5; padding: 5px 10px; border-radius: 5px; }
+    
+    .btn-action { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-next { background: var(--doctor-color); }
+    .btn-skip { background: #95a5a6; }
+  </style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authContainer" class="auth-container">
+  <div class="box">
+    <div id="signinSection">
+      <h2><i class="fas fa-user-md"></i> Doctor Login</h2>
+      <input type="email" placeholder="Doctor Email" id="docEmail">
+      <input type="password" placeholder="Password" id="docPassword">
+      <button onclick="loginDoctor()">Login</button>
+      <div class="toggle-link">
+        New Doctor? <a href="#" onclick="toggleAuth()">Register Here</a>
+      </div>
+      <a href="index.html" class="back-link">Back to Home</a>
+    </div>
+
+    <div id="signupSection" class="hidden">
+      <h2><i class="fas fa-user-plus"></i> Doctor Registration</h2>
+      <input type="text" placeholder="Full Name" id="regName">
+      <input type="email" placeholder="Email Address" id="regEmail">
+      <input type="password" placeholder="Password" id="regPassword">
+      <button onclick="registerDoctor()">Register</button>
+      <div class="toggle-link">
+        Already registered? <a href="#" onclick="toggleAuth()">Login Here</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardContainer" class="dashboard-container hidden">
+  <header>
+    <div class="hospital-name"><i class="fas fa-hospital-user"></i> Dr. Smith's Dashboard</div>
+    <button class="logout-btn" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </header>
+
+  <div class="metrics">
+    <div class="card">
+      <h3><i class="fas fa-check-circle"></i> Patients Visited</h3>
+      <p id="visitedCount">0</p>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-users"></i> Remaining Queue</h3>
+      <p id="remainingCount">0</p>
+    </div>
+    <div class="card">
+      <h3><i class="fas fa-clock"></i> Avg Consult Time</h3>
+      <p>15 min</p>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Current Patient -->
+    <div class="current-patient">
+        <h2 style="color: var(--success-color); margin-top:0;"><i class="fas fa-user-injured"></i> Current Patient</h2>
+        <div class="patient-info">
+            <div class="info-row">
+                <span class="info-label">Token Number</span>
+                <span class="info-val" style="font-size: 1.5rem; font-weight: bold;">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Name</span>
+                <span class="info-val">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Age / Gender</span>
+                <span class="info-val">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Symptoms</span>
+                <span class="info-val">--</span>
+            </div>
+        </div>
+        <div class="btn-action">
+            <button class="btn-next" onclick="nextPatient()"><i class="fas fa-check"></i> Complete & Next</button>
+            <button class="btn-skip"><i class="fas fa-forward"></i> Skip</button>
+        </div>
+    </div>
+
+    <!-- Queue List -->
+    <div class="queue-list">
+        <h3 style="margin-top:0; color: var(--doctor-color);">Upcoming Queue</h3>
+        <div id="queueItems"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // Your web app's Firebase configuration
+  // REPLACE with your actual config from Firebase Console
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8IiQsmrU2Gy1SOzfFdQf41c-M-R5prLQ",
+    authDomain: "nexcura-32ea9.firebaseapp.com",
+    projectId: "nexcura-32ea9",
+    storageBucket: "nexcura-32ea9.firebasestorage.app",
+    messagingSenderId: "12282098251",
+    appId: "1:12282098251:web:b26e8879d8822c488ad3ce"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  let currentPatientId = null;
+
+  window.toggleAuth = function() {
+    document.getElementById("signinSection").classList.toggle("hidden");
+    document.getElementById("signupSection").classList.toggle("hidden");
+  }
+
+  window.loginDoctor = async function() {
+    const email = document.getElementById('docEmail').value;
+    const password = document.getElementById('docPassword').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        alert("Login Failed: Account not found. Please click 'Register Here' to create a new Doctor account.");
+      } else {
+        alert("Login Failed: " + error.message);
+      }
+    }
+  }
+
+  window.registerDoctor = async function() {
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Doctor Registered! Logging in...");
+    } catch (error) {
+      alert("Registration Failed: " + error.message);
+    }
+  }
+
+  window.logout = function() {
+    signOut(auth).then(() => location.reload());
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById('authContainer').classList.add("hidden");
+      document.getElementById('dashboardContainer').classList.remove("hidden");
+      document.querySelector('.logout-btn').onclick = window.logout;
+      startDoctorListener();
+    }
+  });
+
+  function startDoctorListener() {
+    // Listen for patients waiting (In real app, filter by doctor name)
+    const q = query(collection(db, "appointments"), where("status", "==", "waiting"));
+    
+    onSnapshot(q, (snapshot) => {
+      const list = document.getElementById('queueItems');
+      list.innerHTML = "";
+      
+      const patients = [];
+      snapshot.forEach(doc => {
+        patients.push({id: doc.id, ...doc.data()});
+      });
+
+      // Update counts
+      document.getElementById('remainingCount').innerText = patients.length;
+
+      if(patients.length > 0) {
+        // Set current patient (first in list)
+        const current = patients[0];
+        currentPatientId = current.id;
+        
+        // Update UI for current patient
+        const infoVals = document.querySelectorAll('.info-val');
+        infoVals[0].innerText = current.token;
+        infoVals[1].innerText = current.patientName;
+        infoVals[2].innerText = `${current.age} / ${current.gender}`;
+        infoVals[3].innerText = current.symptoms;
+
+        // Populate upcoming list (skipping first)
+        for(let i=1; i<patients.length; i++) {
+          const p = patients[i];
+          const div = document.createElement('div');
+          div.className = 'queue-item';
+          div.innerHTML = `<span class="q-token">${p.token}</span><span>${p.patientName}</span>`;
+          list.appendChild(div);
+        }
+      } else {
+        currentPatientId = null;
+        // Optional: Clear Current Patient UI
+      }
+    }, (error) => console.error("Error fetching doctor queue:", error));
+  }
+
+  window.nextPatient = async function() {
+    if(!currentPatientId) { alert("No patient selected"); return; }
+    
+    try {
+      await updateDoc(doc(db, "appointments", currentPatientId), {
+        status: "completed"
+      });
+      
+      // Increment visited count
+      let visited = parseInt(document.getElementById('visitedCount').innerText);
+      document.getElementById('visitedCount').innerText = visited + 1;
+    } catch(e) {
+      console.error("Error completing patient:", e);
+    }
+  }
+</script>
+
+</body>
+</html>

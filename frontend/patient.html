@@ -207,9 +207,9 @@
   <!-- SIGN IN SECTION -->
   <div id="signinSection">
     <h2><i class="fas fa-user-injured"></i> Patient Sign In</h2>
-    <input type="email" placeholder="Email Address">
-    <input type="password" placeholder="Password">
-    <button onclick="goToDetails()">Sign In</button>
+    <input type="email" placeholder="Email Address" id="loginEmail">
+    <input type="password" placeholder="Password" id="loginPassword">
+    <button onclick="loginPatient()">Sign In</button>
     <div class="toggle-link">
       Don't have an account? <a href="#" onclick="toggleAuth()">Sign Up</a>
     </div>
@@ -218,11 +218,11 @@
   <!-- SIGN UP SECTION -->
   <div id="signupSection" class="hidden">
     <h2><i class="fas fa-user-plus"></i> Create Account</h2>
-    <input type="text" placeholder="Full Name">
-    <input type="email" placeholder="Email Address">
-    <input type="tel" placeholder="Mobile Number">
-    <input type="password" placeholder="Password">
-    <button onclick="toggleAuth()">Sign Up</button>
+    <input type="text" placeholder="Full Name" id="regName">
+    <input type="email" placeholder="Email Address" id="regEmail">
+    <input type="tel" placeholder="Mobile Number" id="regMobile">
+    <input type="password" placeholder="Password" id="regPassword">
+    <button onclick="registerPatient()">Sign Up</button>
     <div class="toggle-link">
       Already have an account? <a href="#" onclick="toggleAuth()">Sign In</a>
     </div>
@@ -244,11 +244,11 @@
   <div class="row">
     <div class="form-group" style="flex: 1;">
       <label>Age</label>
-      <input type="number" placeholder="Age">
+      <input type="number" placeholder="Age" id="ageInput">
     </div>
     <div class="form-group" style="flex: 1;">
       <label>Gender</label>
-      <select>
+      <select id="genderSelect">
         <option>Male</option>
         <option>Female</option>
         <option>Other</option>
@@ -269,12 +269,12 @@
 
   <div class="form-group">
     <label>Symptoms (Optional)</label>
-    <textarea rows="2" placeholder="Briefly describe your symptoms"></textarea>
+    <textarea rows="2" placeholder="Briefly describe your symptoms" id="symptomsInput"></textarea>
   </div>
 
   <div class="form-group">
     <label>Priority</label>
-    <select>
+    <select id="prioritySelect">
       <option>Normal</option>
       <option>Emergency</option>
     </select>
@@ -291,8 +291,8 @@
   
   <div class="token-display">
     <span class="token-label">Your Token</span>
-    <div class="token-number" id="displayToken">--</div>
-    <div class="token-status status-waiting">Waiting</div>
+    <div class="token-number" id="displayToken">Pending</div>
+    <div class="token-status status-waiting" style="background:#e2e6ea; color:#666;">Waiting for Admin</div>
   </div>
 
   <div class="queue-details">
@@ -317,35 +317,135 @@
   <button class="back" onclick="location.href='index.html'">Back to Home</button>
 </div>
 
-<script>
-  function toggleAuth() {
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // Your web app's Firebase configuration
+  // REPLACE with your actual config from Firebase Console
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8IiQsmrU2Gy1SOzfFdQf41c-M-R5prLQ",
+    authDomain: "nexcura-32ea9.firebaseapp.com",
+    projectId: "nexcura-32ea9",
+    storageBucket: "nexcura-32ea9.firebasestorage.app",
+    messagingSenderId: "12282098251",
+    appId: "1:12282098251:web:b26e8879d8822c488ad3ce"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Expose functions to window for HTML onclick events
+  window.toggleAuth = function() {
     document.getElementById("signinSection").classList.toggle("hidden");
     document.getElementById("signupSection").classList.toggle("hidden");
   }
 
-  function goToDetails() {
-    document.getElementById("authBox").classList.add("hidden");
-    document.getElementById("detailsBox").classList.remove("hidden");
+  // --- Authentication Functions ---
+  
+  window.registerPatient = async function() {
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const name = document.getElementById('regName').value;
+
+    if(!email || !password) { alert("Please fill all fields"); return; }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Optional: Save extra user details (like name/mobile) to a 'users' collection here
+      alert("Account Created! Logging you in...");
+      // Auto-login handled by onAuthStateChanged
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
   }
 
-  function showQueue() {
+  window.loginPatient = async function() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      // UI update handled by onAuthStateChanged
+    } catch (error) {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+        alert("Login Failed: Account not found. Please click 'Sign Up' to create a new Patient account.");
+      } else {
+        alert("Login Failed: " + error.message);
+      }
+    }
+  }
+
+  // Listen for login state changes
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in, show details form
+      document.getElementById("authBox").classList.add("hidden");
+      document.getElementById("detailsBox").classList.remove("hidden");
+      // Pre-fill name if available (optional logic)
+    }
+  });
+
+  window.showQueue = async function() {
     const name = document.getElementById('pname_details').value;
     const dept = document.getElementById('deptSelect').value;
+    const age = document.getElementById('ageInput').value;
+    const gender = document.getElementById('genderSelect').value;
+    const symptoms = document.getElementById('symptomsInput').value;
+    const priority = document.getElementById('prioritySelect').value;
 
     if(!name) { alert("Please enter patient name"); return; }
 
-    // Simulate Backend/AI Token Generation
-    const token = "A-" + Math.floor(Math.random() * 900 + 100);
-    const waitTime = Math.floor(Math.random() * 40 + 10) + " min";
-    const doctors = {"General Medicine": "Dr. Smith", "Cardiology": "Dr. Emily", "Orthopedics": "Dr. Jones", "Pediatrics": "Dr. Lee", "Neurology": "Dr. Strange"};
-    const doctor = doctors[dept] || "Dr. On Call";
+    try {
+      // Add request to Firestore
+      const docRef = await addDoc(collection(db, "appointments"), {
+        patientName: name,
+        department: dept,
+        age: age,
+        gender: gender,
+        symptoms: symptoms,
+        priority: priority,
+        status: "pending", // Initial status
+        timestamp: new Date()
+      });
 
-    document.getElementById('displayToken').innerText = token;
-    document.getElementById('displayWait').innerText = waitTime;
-    document.getElementById('displayDoctor').innerText = doctor;
+      // Switch to Queue View
+      document.getElementById("detailsBox").classList.add("hidden");
+      document.getElementById("queueBox").classList.remove("hidden");
 
-    document.getElementById("detailsBox").classList.add("hidden");
-    document.getElementById("queueBox").classList.remove("hidden");
+      // Set initial UI state
+      document.getElementById('displayToken').innerText = "Pending";
+      document.querySelector('.token-status').innerText = "Waiting for Admin";
+      document.querySelector('.token-status').style.backgroundColor = "#e2e6ea";
+
+      // Listen for updates to this specific appointment
+      onSnapshot(doc(db, "appointments", docRef.id), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // Update UI if status changes to waiting (Approved by Admin)
+          if (data.status === "waiting") {
+            document.getElementById('displayToken').innerText = data.token || "--";
+            document.getElementById('displayWait').innerText = data.estimatedTime || "--";
+            document.getElementById('displayDoctor').innerText = data.doctor || "--";
+            
+            const statusElem = document.querySelector('.token-status');
+            statusElem.innerText = "Assigned";
+            statusElem.classList.remove('status-waiting');
+            statusElem.style.backgroundColor = "#d4edda";
+            statusElem.style.color = "#155724";
+          }
+        }
+      });
+
+    } catch (e) {
+      console.error("Error adding document: ", e);
+      alert("Error generating token. See console.");
+    }
   }
 </script>
 
