@@ -11,6 +11,7 @@
       --accent-color: #eef2f3;
       --text-color: #333;
       --white: #ffffff;
+      --doctor-color: #6c5ce7;
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -70,12 +71,16 @@
     .card.admin {
       border-color: var(--primary-color);
     }
+    .card.doctor {
+      border-color: var(--doctor-color);
+    }
     .icon-box {
       font-size: 4rem;
       margin-bottom: 20px;
     }
     .patient .icon-box { color: var(--secondary-color); }
     .admin .icon-box { color: var(--primary-color); }
+    .doctor .icon-box { color: var(--doctor-color); }
 
     h2 { margin: 10px 0; color: #2c3e50; }
     p.desc { color: #7f8c8d; font-size: 0.95rem; line-height: 1.5; }
@@ -98,8 +103,13 @@
       background: var(--primary-color);
       color: white;
     }
+    .doctor .btn {
+      background: var(--doctor-color);
+      color: white;
+    }
     .patient .btn:hover { background: #008cba; }
     .admin .btn:hover { background: #004494; }
+    .doctor .btn:hover { background: #5a4bcf; }
   </style>
 </head>
 
@@ -124,11 +134,21 @@
       <!-- Admin Card -->
       <div class="card admin" onclick="location.href='admin.html'">
         <div class="icon-box">
-          <i class="fas fa-user-md"></i>
+          <i class="fas fa-user-shield"></i>
         </div>
         <h2>Admin Dashboard</h2>
         <p class="desc">Manage hospital staff, monitor patient flow, and handle emergency priorities.</p>
         <button class="btn">Login as Admin</button>
+      </div>
+
+      <!-- Doctor Card -->
+      <div class="card doctor" onclick="location.href='doctor.html'">
+        <div class="icon-box">
+          <i class="fas fa-stethoscope"></i>
+        </div>
+        <h2>Doctor Access</h2>
+        <p class="desc">View patient statistics, daily appointments, and queue status.</p>
+        <button class="btn">Login as Doctor</button>
       </div>
     </div>
   </div>

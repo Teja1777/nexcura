@@ -68,7 +68,7 @@
     .dashboard-container { max-width: 1200px; margin: 0 auto; }
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .hospital-name { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); }
-    .logout-btn { width: auto; margin: 0; background: var(--danger-color); }
+    .logout-btn { width: auto; margin: 0; background: var(--danger-color); cursor: pointer; }
 
     .metrics {
       display: flex;
@@ -113,9 +113,9 @@
     <!-- Sign In -->
     <div id="signinSection">
       <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
-      <input type="email" placeholder="Admin Email">
-      <input type="password" placeholder="Password">
-      <button onclick="showDashboard()">Login</button>
+      <input type="email" placeholder="Admin Email" id="adminEmail">
+      <input type="password" placeholder="Password" id="adminPassword">
+      <button onclick="loginAdmin()">Login</button>
       <div class="toggle-link">
         New Admin? <a href="#" onclick="toggleAuth()">Register Here</a>
       </div>
@@ -124,11 +124,11 @@
     <!-- Sign Up -->
     <div id="signupSection" class="hidden">
       <h2><i class="fas fa-user-plus"></i> Admin Registration</h2>
-      <input type="text" placeholder="Full Name">
-      <input type="text" placeholder="Hospital ID">
-      <input type="email" placeholder="Email Address">
-      <input type="password" placeholder="Password">
-      <button onclick="toggleAuth()">Register</button>
+      <input type="text" placeholder="Full Name" id="regName">
+      <input type="text" placeholder="Hospital ID" id="regId">
+      <input type="email" placeholder="Email Address" id="regEmail">
+      <input type="password" placeholder="Password" id="regPassword">
+      <button onclick="registerAdmin()">Register</button>
       <div class="toggle-link">
         Already registered? <a href="#" onclick="toggleAuth()">Login Here</a>
       </div>
@@ -142,10 +142,7 @@
 <div id="dashboardContainer" class="dashboard-container hidden">
   <header>
     <div class="hospital-name"><i class="fas fa-hospital"></i> NexCura Admin</div>
-    <div>
-      <button class="btn-new" onclick="simulateRequest()" style="background: #f39c12; margin-right: 10px;"><i class="fas fa-bell"></i> Simulate Request</button>
-      <button class="logout-btn" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </div>
+    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </header>
 
   <div class="metrics">
@@ -181,14 +178,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>Vikram Singh</td>
-        <td>28 / M</td>
-        <td>Orthopedics</td>
-        <td>Fracture pain</td>
-        <td>Normal</td>
-        <td><button class="btn-approve" onclick="approveRequest(this)">Approve</button></td>
-      </tr>
+      <!-- Rows will be added dynamically -->
     </tbody>
   </table>
 
@@ -201,83 +191,168 @@
         <th>Patient Name</th>
         <th>Department</th>
         <th>Doctor</th>
-        <th>AI Est. Time</th>
+        <th>Est. Time</th>
         <th>Status</th>
         <th>Action</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>B-05</td>
-        <td>Anita Desai</td>
-        <td>Cardiology</td>
-        <td>Dr. Emily</td>
-        <td>10:15 AM</td>
-        <td><span class="status-badge status-consultation">In Consultation</span></td>
-        <td><button style="margin:0; padding:5px 10px; font-size:0.8rem; background:#7f8c8d; color:white; border:none; border-radius:4px;">Done</button></td>
-      </tr>
+      <!-- Rows will be added dynamically -->
     </tbody>
   </table>
 </div>
 
-<script>
-  function toggleAuth() {
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, query, where, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // Your web app's Firebase configuration
+  // REPLACE with your actual config from Firebase Console
+  const firebaseConfig = {
+    apiKey: "AIzaSyC8IiQsmrU2Gy1SOzfFdQf41c-M-R5prLQ",
+    authDomain: "nexcura-32ea9.firebaseapp.com",
+    projectId: "nexcura-32ea9",
+    storageBucket: "nexcura-32ea9.firebasestorage.app",
+    messagingSenderId: "12282098251",
+    appId: "1:12282098251:web:b26e8879d8822c488ad3ce"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // --- Global Functions for HTML ---
+  window.toggleAuth = function() {
     document.getElementById("signinSection").classList.toggle("hidden");
     document.getElementById("signupSection").classList.toggle("hidden");
   }
 
-  function showDashboard() {
-    document.getElementById("authContainer").classList.add("hidden");
-    document.getElementById("dashboardContainer").classList.remove("hidden");
-    document.body.style.padding = "40px"; // Adjust padding for dashboard view
+  window.loginAdmin = async function() {
+    const email = document.getElementById('adminEmail').value.trim();
+    const password = document.getElementById('adminPassword').value;
+
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error("Login Error:", error);
+      if (error.code === 'auth/invalid-credential') {
+        alert("Login Failed: Invalid Email or Password. If you haven't registered, please click 'Register Here'.");
+      } else if (error.code === 'auth/user-not-found') {
+        alert("Login Failed: Account not found. Please click 'Register Here'.");
+      } else if (error.code === 'auth/invalid-email') {
+        alert("Login Failed: Invalid Email Format.");
+      } else {
+        alert("Login Failed: " + error.message);
+      }
+    }
   }
 
-  function approveRequest(btn) {
-    const row = btn.closest('tr');
-    const patientName = row.cells[0].innerText;
-    const department = row.cells[2].innerText;
+  window.registerAdmin = async function() {
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
 
-    // Generate Token ID (Random for demo)
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Admin Registered! Logging in...");
+    } catch (error) {
+      alert("Registration Failed: " + error.message);
+    }
+  }
+
+  window.logout = function() {
+    signOut(auth).then(() => location.reload());
+  }
+
+  // Auth State Listener
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("authContainer").classList.add("hidden");
+      document.getElementById("dashboardContainer").classList.remove("hidden");
+      document.body.style.padding = "40px";
+      console.log("Admin Logged In. Loading Dashboard...");
+      startListeners();
+      
+      // Update logout button to use real logout
+      document.querySelector('.logout-btn').onclick = window.logout;
+    }
+  });
+
+  window.approveRequest = async function(docId) {
+    // Generate Token & Assign Doctor
     const token = "T-" + Math.floor(Math.random() * 1000);
-    
-    // Auto-assign doctor and time (Simulated)
     const doctors = ["Dr. Smith", "Dr. Jones", "Dr. Emily"];
     const doctor = doctors[Math.floor(Math.random() * doctors.length)];
     const time = (Math.floor(Math.random() * 40) + 10) + " min";
 
-    // Add to Queue Table
-    const queueTable = document.getElementById('queueTable').getElementsByTagName('tbody')[0];
-    const newRow = queueTable.insertRow();
-    newRow.innerHTML = `
-      <td><b>${token}</b></td>
-      <td>${patientName}</td>
-      <td>${department}</td>
-      <td>${doctor}</td>
-      <td>${time}</td>
-      <td><span class="status-badge status-waiting">Waiting</span></td>
-      <td><button style="margin:0; padding:5px 10px; font-size:0.8rem; background:var(--primary-color); color:white; border:none; border-radius:4px;">Call</button></td>
-    `;
-
-    // Remove from Pending Table
-    row.remove();
+    try {
+      await updateDoc(doc(db, "appointments", docId), {
+        status: "waiting",
+        token: token,
+        doctor: doctor,
+        estimatedTime: time
+      });
+    } catch(e) {
+      console.error("Error approving:", e);
+    }
   }
 
-  function simulateRequest() {
-    const names = ["Rohan Das", "Priya Verma", "Amit Kumar", "Sneha Gupta"];
-    const depts = ["General Medicine", "Cardiology", "Orthopedics"];
-    const rand = Math.floor(Math.random() * names.length);
-    
-    const tbody = document.getElementById('pendingTable').getElementsByTagName('tbody')[0];
-    const newRow = tbody.insertRow();
-    newRow.innerHTML = `
-      <td>${names[rand]}</td>
-      <td>${20 + rand * 5} / ${rand % 2 === 0 ? 'M' : 'F'}</td>
-      <td>${depts[rand % 3]}</td>
-      <td>Fever, Body Ache</td>
-      <td>Normal</td>
-      <td><button class="btn-approve" onclick="approveRequest(this)">Approve</button></td>
-    `;
-    alert("New Patient Request Received!");
+  // --- Real-time Listeners ---
+  function startListeners() {
+    // 1. Listen for Pending Requests
+    try {
+      const qPending = query(collection(db, "appointments"), where("status", "==", "pending"));
+      onSnapshot(qPending, (snapshot) => {
+        const tbody = document.getElementById('pendingTable').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = ""; // Clear table
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const row = tbody.insertRow();
+          row.innerHTML = `
+            <td>${data.patientName}</td>
+            <td>${data.age} / ${data.gender}</td>
+            <td>${data.department}</td>
+            <td>${data.symptoms}</td>
+            <td>${data.priority}</td>
+            <td><button class="btn-approve" onclick="approveRequest('${doc.id}')">Approve</button></td>
+          `;
+        });
+      }, (error) => console.error("Error fetching pending requests:", error));
+    } catch (e) { console.error("Setup Error:", e); }
+
+    // 2. Listen for Live Queue (Waiting)
+    try {
+      const qWaiting = query(collection(db, "appointments"), where("status", "==", "waiting"));
+      onSnapshot(qWaiting, (snapshot) => {
+        const tbody = document.getElementById('queueTable').getElementsByTagName('tbody')[0];
+        tbody.innerHTML = ""; // Clear table
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const row = tbody.insertRow();
+          row.innerHTML = `
+            <td><b>${data.token}</b></td>
+            <td>${data.patientName}</td>
+            <td>${data.department}</td>
+            <td>${data.doctor}</td>
+            <td>${data.estimatedTime}</td>
+            <td><span class="status-badge status-waiting">Waiting</span></td>
+            <td><button style="margin:0; padding:5px 10px; font-size:0.8rem; background:#7f8c8d; color:white; border:none; border-radius:4px;">Done</button></td>
+          `;
+        });
+      }, (error) => console.error("Error fetching queue:", error));
+    } catch (e) { console.error("Setup Error:", e); }
   }
 </script>
 
