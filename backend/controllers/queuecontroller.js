@@ -1,12 +1,19 @@
 let queue = [];
 let currentToken = 1;
+const AVG_TIME_PER_PATIENT = 10; // 10 minutes per patient
 
 // Generate new token
 exports.generateToken = (req, res) => {
+  const { name } = req.body;
+  const peopleAhead = queue.length;
+  const estimatedWaitTime = peopleAhead * AVG_TIME_PER_PATIENT;
+
   const token = {
     tokenNumber: currentToken,
+    patientName: name || "Guest",
     status: "waiting",
-    createdAt: new Date()
+    createdAt: new Date(),
+    estimatedWaitTime: `${estimatedWaitTime} minutes`
   };
 
   queue.push(token);
@@ -14,7 +21,8 @@ exports.generateToken = (req, res) => {
 
   res.json({
     message: "Token generated",
-    token
+    token,
+    estimatedWaitTime: `${estimatedWaitTime} minutes`
   });
 };
 

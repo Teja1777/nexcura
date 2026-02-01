@@ -111,9 +111,27 @@
     .admin .btn:hover { background: #004494; }
     .doctor .btn:hover { background: #5a4bcf; }
   </style>
+ <script>
+  fetch("http://localhost:5050/api/queue")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("queueData").innerHTML = `
+        <h2>Queue Status</h2>
+        <p><b>Message:</b> ${data.message}</p>
+      `;
+    })
+    .catch(err => {
+      document.getElementById("queueData").innerText =
+        "Failed to load queue data";
+      console.error(err);
+    });
+</script>
 </head>
 
 <body>
+  <div id="queueData">
+  Loading queue info...
+</div>
   <div class="container">
     <header>
       <h1>NexCura <i class="fas fa-heartbeat"></i></h1>
