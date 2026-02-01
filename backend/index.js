@@ -2,16 +2,20 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+const PORT = 5050;
+
+const queueRoutes = require("./routes/queueroutes");
 
 app.use(cors());
 app.use(express.json());
 
+// IMPORTANT LINE
+app.use("/api", queueRoutes);
+
 app.get("/", (req, res) => {
-  res.send("Backend server is running");
+  res.send("Server root working");
 });
 
-const PORT = 5050;
-
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
